@@ -2,7 +2,7 @@
   "name": "vault-app",
   "version": "1.0.0",
   "description": "Your personal encrypted secrets vault",
-  "author": "patmakesapps",
+  "author": "Lumalien",
   "main": "main.js",
   "scripts": {
     "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
@@ -12,7 +12,7 @@
     "preview": "vite preview"
   },
   "build": {
-    "appId": "com.patmakesapps.vault",
+    "appId": "com.lumalien.vault",
     "productName": "Vault",
     "icon": "src/assets/icon.png",
     "directories": {
@@ -28,7 +28,7 @@
       ],
       "icon": "src/assets/icon.ico",
       "signAndEditExecutable": false,
-      "publisherName": "patmakesapps"
+      "publisherName": "Lumalien"
     },
     "nsis": {
       "artifactName": "${productName}-${version}-win-${arch}-setup.${ext}",

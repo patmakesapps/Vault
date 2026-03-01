@@ -70,6 +70,8 @@ async function dbPut(db, obj) {
 const uid = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
 const CATEGORIES = ["API Key", "Password", "Email", "Token", "Certificate", "SSH Key", "Database", "Other"];
+const BRAND_NAME = "LUMALIEN";
+const BRAND_TAGLINE = "OWN YOUR POTENTIAL.";
 
 function daysUntil(dateStr) {
   if (!dateStr) return null;
@@ -258,7 +260,10 @@ const css = `
   .value-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; opacity: 0.5; }
   .value-toggle:hover { opacity: 1; }
   .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
-  .lock-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); background-image: radial-gradient(ellipse at 50% 0%, rgba(124,106,247,0.08) 0%, transparent 60%); }
+  .lock-screen { min-height: 100vh; display: flex; flex-direction: column; gap: 14px; align-items: center; justify-content: center; background: var(--bg); background-image: radial-gradient(ellipse at 50% 0%, rgba(124,106,247,0.08) 0%, transparent 60%); }
+  .lock-brand { text-align: center; padding: 0 14px; }
+  .lock-brand-title { font-family: "Courier New", var(--mono), monospace; font-size: clamp(1.5rem, 6vw, 3.2rem); letter-spacing: 0.12em; color: var(--text); line-height: 1; }
+  .lock-brand-sub { margin: 8px auto 0; max-width: 44ch; font-family: "Courier New", var(--mono), monospace; font-size: clamp(0.5rem, 0.78vw, 0.72rem); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
   .lock-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 400px; max-width: 95vw; box-shadow: 0 0 80px rgba(124,106,247,0.1); animation: slideUp 0.3s ease; }
   .lock-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; justify-content: center; }
   .lock-logo-icon { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, var(--accent), #5b4fcf); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px var(--accent-glow); }
@@ -503,6 +508,10 @@ export default function App() {
     <>
       <style>{css}</style>
       <div className="lock-screen">
+        <div className="lock-brand">
+          <div className="lock-brand-title">{BRAND_NAME}</div>
+          <div className="lock-brand-sub">{BRAND_TAGLINE}</div>
+        </div>
         <div className="lock-card">
           <div className="lock-logo">
             <div className="lock-logo-icon"><Icon d={Icons.shield} size={24} color="#fff" /></div>
