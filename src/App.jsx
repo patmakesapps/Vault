@@ -112,6 +112,48 @@ const Icons = {
   settings: "M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z",
 };
 
+const SelectField = ({ value, onChange, options }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const selected = options.find(o => o.value === value) || options[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocDown);
+    return () => document.removeEventListener("mousedown", onDocDown);
+  }, [open]);
+
+  return (
+    <div className={`custom-select ${open ? "open" : ""}`} ref={ref}>
+      <button
+        type="button"
+        className="form-input custom-select-trigger"
+        onClick={() => setOpen(v => !v)}
+      >
+        <span>{selected?.label || ""}</span>
+        <Icon d="M6 9l6 6 6-6" size={16} color="var(--accent2)" />
+      </button>
+      {open && (
+        <div className="custom-select-menu">
+          {options.map(o => (
+            <button
+              key={o.value}
+              type="button"
+              className={`custom-select-option ${o.value === selected?.value ? "active" : ""}`}
+              onClick={() => { onChange(o.value); setOpen(false); }}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap');
@@ -198,7 +240,17 @@ const css = `
   .form-input, .form-select, .form-textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 8px; font-size: 13px; font-family: var(--font); outline: none; transition: border 0.15s; }
   .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
   .form-select { cursor: pointer; appearance: none; -webkit-appearance: none; padding-right: 44px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px 16px; }
+  .form-select option { background: var(--surface2); color: var(--text); }
+  .form-select option:hover,
+  .form-select option:focus,
+  .form-select option:checked { background: rgba(124,106,247,0.35); color: var(--text); }
   .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .custom-select { position: relative; }
+  .custom-select-trigger { display: flex; align-items: center; justify-content: space-between; cursor: pointer; text-align: left; }
+  .custom-select-menu { position: absolute; left: 0; right: 0; top: calc(100% + 6px); background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; z-index: 220; box-shadow: 0 18px 40px rgba(0,0,0,0.45); }
+  .custom-select-option { width: 100%; border: 0; background: transparent; color: var(--text); text-align: left; padding: 10px 12px; font-size: 13px; font-family: var(--font); cursor: pointer; }
+  .custom-select-option:hover, .custom-select-option.active { background: rgba(124,106,247,0.35); color: #fff; }
+  .custom-select.open .custom-select-trigger { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
   .form-textarea { resize: vertical; min-height: 80px; font-family: var(--mono); font-size: 12px; }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .value-wrap { position: relative; }
@@ -687,7 +739,7 @@ export default function App() {
 
       {/* Project Modal */}
       {showProjectModal && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowProjectModal(false)}>
+        <div className="modal-overlay">
           <div className="modal">
             <div className="modal-title">New Project <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setShowProjectModal(false)}><Icon d={Icons.x} size={14} /></button></div>
             <div className="form-group">
@@ -704,7 +756,7 @@ export default function App() {
 
       {/* Entry Modal */}
       {showEntryModal && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowEntryModal(false)}>
+        <div className="modal-overlay">
           <div className="modal">
             <div className="modal-title">
               {editEntry ? "Edit Entry" : "New Entry"}
@@ -717,9 +769,11 @@ export default function App() {
               </div>
               <div className="form-group">
                 <label className="form-label">Category</label>
-                <select className="form-select" value={eCategory} onChange={e => setECategory(e.target.value)}>
-                  {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-                </select>
+                <SelectField
+                  value={eCategory}
+                  onChange={setECategory}
+                  options={CATEGORIES.map(c => ({ value: c, label: c }))}
+                />
               </div>
             </div>
             <div className="form-group">
@@ -732,9 +786,11 @@ export default function App() {
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Project</label>
-                <select className="form-select" value={eProject} onChange={e => setEProject(e.target.value)}>
-                  {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
+                <SelectField
+                  value={eProject}
+                  onChange={setEProject}
+                  options={projects.map(p => ({ value: p.id, label: p.name }))}
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Expiry Date</label>
@@ -759,7 +815,7 @@ export default function App() {
 
       {/* Settings Modal (Electron only) */}
       {showSettings && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowSettings(false)}>
+        <div className="modal-overlay">
           <div className="modal">
             <div className="modal-title">Settings <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setShowSettings(false)}><Icon d={Icons.x} size={14} /></button></div>
             <div className="form-group">
@@ -778,7 +834,7 @@ export default function App() {
       )}
 
       {confirmDelete && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setConfirmDelete(null)}>
+        <div className="modal-overlay">
           <div className="modal" style={{ maxWidth: 420 }}>
             <div className="modal-title">
               {confirmDelete.type === 'project' ? 'Delete Project?' : 'Delete Entry?'}
