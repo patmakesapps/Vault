@@ -43,6 +43,7 @@ function setBackupDir(dir) {
 function createWindow() {
   const distIndexPath = path.join(__dirname, 'dist/index.html');
   const windowIconPath = resolveAssetPath('src', 'assets', 'icon.ico');
+  const windowIcon = nativeImage.createFromPath(windowIconPath);
 
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -57,7 +58,7 @@ function createWindow() {
       nodeIntegration: false,   // Security: no Node in renderer
       sandbox: false
     },
-    icon: windowIconPath,
+    icon: windowIcon,
     show: false,
   });
 
