@@ -27,7 +27,7 @@
         "portable"
       ],
       "icon": "src/assets/icon.ico",
-      "signAndEditExecutable": false,
+      "signAndEditExecutable": true,
       "publisherName": "Lumalien"
     },
     "nsis": {
