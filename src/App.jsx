@@ -107,6 +107,7 @@ const Icons = {
   bell: "M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0",
   shield: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
   x: "M18 6L6 18M6 6l12 12",
+  info: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 8h.01M11 12h1v4h1",
   check: "M20 6L9 17l-5-5",
   tag: "M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82zM7 7h.01",
   cloud: "M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z",
@@ -185,6 +186,11 @@ const css = `
   .project-item.active { background: var(--accent-glow); color: var(--accent2); }
   .project-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .project-count { background: var(--surface3); color: var(--muted); font-size: 10px; padding: 2px 6px; border-radius: 10px; font-family: var(--mono); }
+  .project-item-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+  .project-edit-btn { opacity: 0; color: var(--muted); cursor: pointer; padding: 2px; border-radius: 4px; display: flex; align-items: center; transition: opacity 0.15s; }
+  .project-item:hover .project-edit-btn { opacity: 1; }
+  .project-edit-btn:hover { color: var(--accent2); }
+  .project-rename-input { background: var(--surface3); border: 1px solid var(--accent); border-radius: 4px; color: var(--text); font-size: 13px; font-weight: 600; padding: 1px 6px; width: 100%; outline: none; font-family: inherit; }
   .sidebar-footer { padding: 12px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
   .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
   .topbar { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: var(--surface); -webkit-app-region: drag; }
@@ -270,6 +276,8 @@ const css = `
   .lock-title { font-size: 24px; font-weight: 800; text-align: center; }
   .lock-sub { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 24px; }
   .lock-error { color: var(--danger); font-size: 12px; text-align: center; margin-top: 8px; }
+  .lock-reset-link { font-size: 11px; color: var(--muted); text-align: center; margin-top: 12px; cursor: pointer; }
+  .lock-reset-link:hover { color: var(--danger); }
   .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; animation: slideUp 0.2s ease; z-index: 999; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
   .toast.ok { border-color: rgba(34,197,94,0.4); }
   .toast.err { border-color: rgba(239,68,68,0.4); }
@@ -283,6 +291,15 @@ const css = `
   .filter-chip:hover, .filter-chip.active { border-color: var(--accent); color: var(--accent2); background: var(--accent-glow); }
   .backup-bar { background: rgba(124,106,247,0.08); border: 1px solid rgba(124,106,247,0.2); border-radius: 10px; padding: 10px 14px; font-size: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
   .backup-path { font-family: var(--mono); color: var(--accent2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .about-modal { max-width: 480px; }
+  .about-badge { display: inline-block; background: var(--surface3); color: var(--accent2); font-size: 11px; font-family: var(--mono); padding: 3px 10px; border-radius: 20px; margin-bottom: 12px; }
+  .about-content { font-size: 13px; color: var(--muted); line-height: 1.6; display: flex; flex-direction: column; gap: 16px; }
+  .about-content p { color: var(--text); margin: 0; }
+  .about-section { display: flex; flex-direction: column; gap: 8px; }
+  .about-section-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .about-section ul { margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 6px; }
+  .about-section li strong { color: var(--text); }
+  .about-warn { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; padding: 10px 14px; color: var(--warn); font-size: 12px; }
 `;
 
 export default function App() {
@@ -310,6 +327,10 @@ export default function App() {
   const toastTimer = useRef(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [backupDir, setBackupDir] = useState(null);
+  const [editingProjectId, setEditingProjectId] = useState(null);
+  const [editingProjectName, setEditingProjectName] = useState("");
+  const [showAbout, setShowAbout] = useState(false);
+  const [showReset, setShowReset] = useState(false);
 
   // Entry form
   const [eTitle, setETitle] = useState("");
@@ -359,12 +380,16 @@ export default function App() {
     if (isNew) {
       if (pwdInput.length < 8) return setLockError("Password must be at least 8 characters.");
       if (pwdInput !== confirmInput) return setLockError("Passwords don't match.");
-      setMasterPwd(pwdInput);
-      setProjects([]); setEntries([]);
-      setUnlocked(true);
-      const enc = await encryptData({ projects: [], entries: [] }, pwdInput);
-      await dbPut(db, { id: "vault", data: enc });
-      await dbPut(db, { id: "meta", data: true });
+      try {
+        const enc = await encryptData({ projects: [], entries: [] }, pwdInput);
+        await dbPut(db, { id: "vault", data: enc });
+        await dbPut(db, { id: "meta", data: true });
+        setMasterPwd(pwdInput);
+        setProjects([]); setEntries([]);
+        setUnlocked(true);
+      } catch {
+        setLockError("Failed to create vault. Please try again.");
+      }
     } else {
       try {
         const row = await dbGet(db, "vault");
@@ -380,6 +405,14 @@ export default function App() {
     }
   };
 
+  const resetVault = async () => {
+    const tx = db.transaction("vault", "readwrite");
+    tx.objectStore("vault").clear();
+    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+    setIsNew(true);
+    setPwdInput(""); setConfirmInput(""); setLockError("");
+  };
+
   const addProject = async () => {
     if (!pName.trim()) return;
     const p = { id: uid(), name: pName.trim(), created: now() };
@@ -389,6 +422,14 @@ export default function App() {
     setPName(""); setShowProjectModal(false);
     setActiveProject(p.id); setView("project");
     showToast("Project created");
+  };
+
+  const renameProject = async (id, name) => {
+    if (!name.trim()) return setEditingProjectId(null);
+    const np = projects.map(p => p.id === id ? { ...p, name: name.trim() } : p);
+    setProjects(np);
+    setEditingProjectId(null);
+    await persist(np, entries);
   };
 
   const deleteProject = async (pid) => {
@@ -533,6 +574,22 @@ export default function App() {
           <button className="btn btn-primary" style={{ width: "100%", marginTop: 8, justifyContent: "center" }} onClick={handleUnlock}>
             <Icon d={Icons.unlock} size={14} />{isNew ? "Create Vault" : "Unlock Vault"}
           </button>
+          {!isNew && !showReset && (
+            <p className="lock-reset-link" onClick={() => setShowReset(true)}>Forgot password?</p>
+          )}
+          {showReset && (
+            <div style={{ marginTop: 12, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, padding: "12px 14px" }}>
+              <p style={{ fontSize: 12, color: "var(--danger)", marginBottom: 8, lineHeight: 1.5 }}>
+                <strong>Warning:</strong> This will permanently delete all vault data. There is no way to recover it.
+              </p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: "center" }} onClick={() => setShowReset(false)}>Cancel</button>
+                <button className="btn btn-danger btn-sm" style={{ flex: 1, justifyContent: "center" }} onClick={resetVault}>
+                  <Icon d={Icons.trash} size={12} /> Reset Vault
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>
@@ -563,10 +620,32 @@ export default function App() {
             <div className="project-list">
               {projects.map(p => (
                 <div key={p.id} className={`project-item ${activeProject === p.id && view === "project" ? "active" : ""}`}
-                  onClick={() => { setActiveProject(p.id); setView("project"); setSearch(""); setCatFilter(null); }}>
+                  onClick={() => { if (editingProjectId === p.id) return; setActiveProject(p.id); setView("project"); setSearch(""); setCatFilter(null); }}>
                   <Icon d={Icons.folder} size={13} />
-                  <span className="project-name">{p.name}</span>
-                  <span className="project-count">{entries.filter(e => e.projectId === p.id).length}</span>
+                  {editingProjectId === p.id ? (
+                    <input
+                      className="project-rename-input"
+                      value={editingProjectName}
+                      onChange={e => setEditingProjectName(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") renameProject(p.id, editingProjectName);
+                        if (e.key === "Escape") setEditingProjectId(null);
+                      }}
+                      onBlur={() => renameProject(p.id, editingProjectName)}
+                      autoFocus
+                      onClick={e => e.stopPropagation()}
+                    />
+                  ) : (
+                    <span className="project-name">{p.name}</span>
+                  )}
+                  <div className="project-item-actions">
+                    {editingProjectId !== p.id && (
+                      <span className="project-edit-btn" onClick={e => { e.stopPropagation(); setEditingProjectId(p.id); setEditingProjectName(p.name); }}>
+                        <Icon d={Icons.edit} size={11} />
+                      </span>
+                    )}
+                    <span className="project-count">{entries.filter(e => e.projectId === p.id).length}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -593,6 +672,9 @@ export default function App() {
                 <Icon d={Icons.settings} size={13} /> Settings
               </button>
             )}
+            <button className="btn btn-ghost btn-sm" style={{ justifyContent: "center" }} onClick={() => setShowAbout(true)}>
+              <Icon d={Icons.info} size={13} /> About
+            </button>
           </div>
         </div>
 
@@ -837,6 +919,39 @@ export default function App() {
             </div>
             <div className="modal-footer">
               <button className="btn btn-primary" onClick={() => setShowSettings(false)}>Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAbout && (
+        <div className="modal-overlay" onClick={() => setShowAbout(false)}>
+          <div className="modal about-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-title">
+              About Vault
+              <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setShowAbout(false)}><Icon d={Icons.x} size={14} /></button>
+            </div>
+            <div className="about-content">
+              <div className="about-badge">v1.0.0</div>
+              <p>Vault is a fully offline, encrypted secrets manager. Your data never leaves your device.</p>
+              <div className="about-section">
+                <div className="about-section-title">How your data is protected</div>
+                <ul>
+                  <li><strong>AES-256-GCM encryption</strong> — industry-standard symmetric encryption protects every entry</li>
+                  <li><strong>PBKDF2 key derivation</strong> — your master password is run through 310,000 iterations before being used as a key, making brute-force attacks extremely slow</li>
+                  <li><strong>Random salt & IV per save</strong> — each save generates fresh cryptographic randomness, so no two encrypted blobs look alike</li>
+                  <li><strong>Local storage only</strong> — all data is stored in your app's local folder on this machine, never transmitted anywhere</li>
+                </ul>
+              </div>
+              <div className="about-section">
+                <div className="about-section-title">What we don't do</div>
+                <ul>
+                  <li>No accounts, no sign-in, no cloud sync</li>
+                  <li>No telemetry or analytics</li>
+                  <li>No internet connection required</li>
+                </ul>
+              </div>
+              <div className="about-warn">If you forget your master password, your data cannot be recovered. Use the backup feature regularly.</div>
             </div>
           </div>
         </div>
