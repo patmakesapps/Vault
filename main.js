@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog, Tray, Menu, nativeImage } = require
 const path = require('path');
 const fs = require('fs');
 
-const isDev = process.env.NODE_ENV !== 'production';
+const isDev = !app.isPackaged;
 let mainWindow;
 let tray;
 
@@ -32,6 +32,8 @@ function setBackupDir(dir) {
 
 // ─── Window ───────────────────────────────────────────────────────────────────
 function createWindow() {
+  const distIndexPath = path.join(__dirname, 'dist/index.html');
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 780,
@@ -51,11 +53,22 @@ function createWindow() {
 
   // Load app
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.loadURL('http://localhost:5173').catch(() => {
+      if (fs.existsSync(distIndexPath)) {
+        mainWindow.loadFile(distIndexPath);
+      }
+    });
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
+    mainWindow.loadFile(distIndexPath);
   }
+
+  // Dev fallback when Vite server is not running.
+  mainWindow.webContents.on('did-fail-load', () => {
+    if (isDev && fs.existsSync(distIndexPath)) {
+      mainWindow.loadFile(distIndexPath);
+    }
+  });
 
   mainWindow.once('ready-to-show', () => mainWindow.show());
 
