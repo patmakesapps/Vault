@@ -1,7 +1,7 @@
 {
-  "name": "vault-app",
+  "name": "lumalok",
   "version": "1.0.0",
-  "description": "Your personal encrypted secrets vault",
+  "description": "Private, encrypted, secure",
   "author": "Lumalien",
   "main": "main.js",
   "scripts": {
@@ -12,8 +12,8 @@
     "preview": "vite preview"
   },
   "build": {
-    "appId": "com.lumalien.vault",
-    "productName": "Vault",
+    "appId": "com.lumalien.lumalok",
+    "productName": "Lumalok",
     "icon": "src/assets/icon.ico",
     "directories": {
       "output": "dist-electron"

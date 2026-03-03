@@ -102,10 +102,10 @@ function createTray() {
   }
 
   tray = new Tray(trayIcon);
-  tray.setToolTip('Vault — Secrets Manager');
+  tray.setToolTip('Lumalok — Secrets Manager');
 
   const contextMenu = Menu.buildFromTemplate([
-    { label: 'Open Vault', click: () => { mainWindow.show(); mainWindow.focus(); } },
+    { label: 'Open Lumalok', click: () => { mainWindow.show(); mainWindow.focus(); } },
     { type: 'separator' },
     { label: 'Quit', click: () => { app.isQuiting = true; app.quit(); } }
   ]);
@@ -123,7 +123,7 @@ ipcMain.handle('vault:save-backup', async (_, encryptedData) => {
 
   try {
     if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
-    const filename = `vault-backup-${new Date().toISOString().slice(0, 10)}.vault`;
+    const filename = `lumalok-backup-${new Date().toISOString().slice(0, 10)}.lumalok`;
     const filepath = path.join(backupDir, filename);
     fs.writeFileSync(filepath, encryptedData, 'utf8');
     return { ok: true, filepath };
@@ -135,9 +135,12 @@ ipcMain.handle('vault:save-backup', async (_, encryptedData) => {
 // Export vault — open save dialog
 ipcMain.handle('vault:export', async (_, encryptedData) => {
   const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, {
-    title: 'Export Vault Backup',
-    defaultPath: `vault-backup-${new Date().toISOString().slice(0, 10)}.vault`,
-    filters: [{ name: 'Vault File', extensions: ['vault'] }]
+    title: 'Export Lumalok Backup',
+    defaultPath: `lumalok-backup-${new Date().toISOString().slice(0, 10)}.lumalok`,
+    filters: [
+      { name: 'Lumalok File', extensions: ['lumalok'] },
+      { name: 'Legacy Vault File', extensions: ['vault'] }
+    ]
   });
   if (canceled || !filePath) return { ok: false };
   try {
@@ -151,8 +154,11 @@ ipcMain.handle('vault:export', async (_, encryptedData) => {
 // Import vault — open file dialog
 ipcMain.handle('vault:import', async () => {
   const { filePaths, canceled } = await dialog.showOpenDialog(mainWindow, {
-    title: 'Import Vault Backup',
-    filters: [{ name: 'Vault File', extensions: ['vault'] }],
+    title: 'Import Lumalok Backup',
+    filters: [
+      { name: 'Lumalok File', extensions: ['lumalok'] },
+      { name: 'Legacy Vault File', extensions: ['vault'] }
+    ],
     properties: ['openFile']
   });
   if (canceled || !filePaths[0]) return { ok: false };

@@ -487,15 +487,15 @@ export default function App() {
     const enc = await encryptData({ projects, entries }, masterPwd);
     if (isElectron) {
       const res = await window.vaultAPI.exportVault(enc);
-      if (res.ok) showToast("Vault exported to " + res.filepath.split(/[\\/]/).pop());
+      if (res.ok) showToast("Lumalok exported to " + res.filepath.split(/[\\/]/).pop());
       else if (res.reason) showToast("Export failed: " + res.reason, "err");
     } else {
       const blob = new Blob([enc], { type: "application/octet-stream" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url; a.download = `vault-backup-${new Date().toISOString().slice(0, 10)}.vault`;
+      a.href = url; a.download = `lumalok-backup-${new Date().toISOString().slice(0, 10)}.lumalok`;
       a.click(); URL.revokeObjectURL(url);
-      showToast("Vault exported");
+      showToast("Lumalok exported");
     }
   };
 
@@ -507,7 +507,7 @@ export default function App() {
         const d = await decryptData(res.data, masterPwd);
         setProjects(d.projects || []); setEntries(d.entries || []);
         await persist(d.projects, d.entries);
-        showToast("Vault imported");
+        showToast("Lumalok imported");
       } catch { showToast("Import failed — wrong password or corrupt file", "err"); }
     } else {
       const file = e?.target?.files?.[0];
@@ -517,7 +517,7 @@ export default function App() {
         const d = await decryptData(text, masterPwd);
         setProjects(d.projects || []); setEntries(d.entries || []);
         await persist(d.projects, d.entries);
-        showToast("Vault imported");
+        showToast("Lumalok imported");
       } catch { showToast("Import failed — wrong password or corrupt file", "err"); }
       if (e?.target) e.target.value = "";
     }
@@ -557,7 +557,7 @@ export default function App() {
           <div className="lock-logo">
             <div className="lock-logo-icon"><Icon d={Icons.shield} size={24} color="#fff" /></div>
           </div>
-          <div className="lock-title">VAULT</div>
+          <div className="lock-title">Lumalok</div>
           <p className="lock-sub" style={{ marginTop: 6 }}>{isNew ? "Create a master password to get started." : "Enter your master password to unlock."}</p>
           <div className="form-group" style={{ marginTop: 8 }}>
             <div className="value-wrap">
@@ -604,7 +604,7 @@ export default function App() {
         <div className="sidebar">
           <div className="sidebar-logo">
             <div className="logo-icon"><Icon d={Icons.shield} size={16} color="#fff" /></div>
-            <div className="logo-text">VAULT<span>.</span></div>
+            <div className="logo-text">Lumalok<span>.</span></div>
           </div>
           <div className="sidebar-section">
             <div className="sidebar-label">Navigation</div>
@@ -664,7 +664,7 @@ export default function App() {
             ) : (
               <label className="btn btn-ghost btn-sm" style={{ justifyContent: "center", cursor: "pointer" }}>
                 <Icon d={Icons.upload} size={13} /> Import Backup
-                <input type="file" accept=".vault" style={{ display: "none" }} onChange={importVault} />
+                <input type="file" accept=".lumalok,.vault" style={{ display: "none" }} onChange={importVault} />
               </label>
             )}
             {isElectron && (
@@ -912,7 +912,7 @@ export default function App() {
             <div className="form-group">
               <label className="form-label">Auto-Backup Folder</label>
               <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 10 }}>
-                Every save will write a timestamped <code style={{ fontFamily: "var(--mono)", color: "var(--accent2)" }}>.vault</code> file here. Point this at your Dropbox, iCloud, or Google Drive folder for seamless cloud backup.
+                Every save will write a timestamped <code style={{ fontFamily: "var(--mono)", color: "var(--accent2)" }}>.lumalok</code> file here. Point this at your Dropbox, iCloud, or Google Drive folder for seamless cloud backup.
               </p>
               {backupDir && <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--accent2)", background: "var(--surface2)", padding: "8px 12px", borderRadius: 6, marginBottom: 10, wordBreak: "break-all" }}>{backupDir}</div>}
               <button className="btn btn-ghost" onClick={chooseBackupDir}><Icon d={Icons.folder} size={13} /> {backupDir ? "Change Folder" : "Choose Folder"}</button>
@@ -928,12 +928,12 @@ export default function App() {
         <div className="modal-overlay" onClick={() => setShowAbout(false)}>
           <div className="modal about-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-title">
-              About Vault
+              About Lumalok
               <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setShowAbout(false)}><Icon d={Icons.x} size={14} /></button>
             </div>
             <div className="about-content">
               <div className="about-badge">v1.0.0</div>
-              <p>Vault is a fully offline, encrypted secrets manager. Your data never leaves your device.</p>
+              <p>Lumalok is a fully offline, encrypted secrets manager. Your data never leaves your device.</p>
               <div className="about-section">
                 <div className="about-section-title">How your data is protected</div>
                 <ul>
